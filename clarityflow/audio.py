@@ -37,14 +37,37 @@ def extract_audio(video_path: Path, output_path: Path, verbose: bool = False) ->
     subprocess.run(cmd, check=True, **kwargs)
 
 
-def enhance(audio_path: Path, output_dir: Path, binary: Path, verbose: bool = False) -> Path:
+def enhance(audio_path: Path, output_dir: Path, binary: Path, verbose: bool = False,
+            atten_lim_db: int = 12) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     cmd = [
         str(binary),
         str(audio_path),
         "-o", str(output_dir),
-        "--pf", "-D",
+        "--atten-lim-db", str(atten_lim_db),
+        "-D",
     ]
     kwargs: dict = {} if verbose else {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
     subprocess.run(cmd, check=True, **kwargs)
     return output_dir / audio_path.name
+
+
+CLARITY_FILTERS = (
+    "highpass=f=80,"
+    "equalizer=f=2500:t=q:w=1.2:g=3,"
+    "equalizer=f=5000:t=q:w=1.5:g=1.5,"
+    "loudnorm=I=-16:TP=-1.5:LRA=11"
+)
+
+
+def clarity_filter(input_path: Path, output_path: Path, verbose: bool = False) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "ffmpeg", "-hide_banner", "-y",
+        "-i", str(input_path),
+        "-af", CLARITY_FILTERS,
+        "-codec:a", "pcm_s16le",
+        str(output_path),
+    ]
+    kwargs: dict = {} if verbose else {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
+    subprocess.run(cmd, check=True, **kwargs)
