@@ -7,21 +7,16 @@ from pathlib import Path
 
 from clarityflow.pipeline import Config, run
 
-MODELS = ["realesr-animevideov3", "realesrgan-x4plus", "realesrgan-x4plus-anime"]
-X4_ONLY_MODELS = {"realesrgan-x4plus", "realesrgan-x4plus-anime"}
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="clarityflow",
-        description="Video upscaling powered by Real-ESRGAN",
+        description="Video upscaling powered by Real-ESRGAN (4x)",
     )
     parser.add_argument("input", type=Path, help="input video file")
-    parser.add_argument("-o", "--output", type=Path, help="output file (default: <input>_<N>x.<ext>)")
-    parser.add_argument("-s", "--scale", type=int, choices=[2, 3, 4], default=2,
-                        help="upscale ratio (default: 2)")
-    parser.add_argument("-m", "--model", default="realesr-animevideov3", choices=MODELS,
-                        help="model name (default: realesr-animevideov3)")
+    parser.add_argument("-o", "--output", type=Path, help="output file (default: <input>_4x.<ext>)")
+    parser.add_argument("--mode", default="real", choices=["real", "anime"],
+                        help="content type: real for live-action, anime for animation (default: real)")
     parser.add_argument("--codec", default="libx264",
                         help="output video codec (default: libx264)")
     parser.add_argument("--crf", type=int, default=18,
@@ -35,17 +30,13 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.model in X4_ONLY_MODELS and args.scale != 4:
-        parser.error(f"{args.model} only supports 4x upscaling, use -s 4")
-
     if args.output is None:
-        args.output = args.input.parent / f"{args.input.stem}_{args.scale}x{args.input.suffix}"
+        args.output = args.input.parent / f"{args.input.stem}_4x{args.input.suffix}"
 
     cfg = Config(
         input=args.input.resolve(),
         output=args.output.resolve(),
-        scale=args.scale,
-        model=args.model,
+        mode=args.mode,
         codec=args.codec,
         crf=args.crf,
         keep_frames=args.keep_frames,

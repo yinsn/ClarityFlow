@@ -11,18 +11,28 @@ from clarityflow import __version__
 from clarityflow.ffmpeg import VideoInfo, assemble_video, extract_frames, probe
 from clarityflow.upscaler import find_binary, find_models, upscale
 
+SCALE = 4
+
+MODE_MODELS = {
+    "real": "realesrgan-x4plus",
+    "anime": "realesrgan-x4plus-anime",
+}
+
 
 @dataclass
 class Config:
     input: Path
     output: Path
-    scale: int = 2
-    model: str = "realesr-animevideov3"
+    mode: str = "real"
     codec: str = "libx264"
     crf: int = 18
     keep_frames: bool = False
     tmp_dir: Path | None = None
     verbose: bool = False
+
+    @property
+    def model(self) -> str:
+        return MODE_MODELS[self.mode]
 
 
 def run(cfg: Config) -> None:
@@ -36,8 +46,8 @@ def run(cfg: Config) -> None:
     models_dir = find_models(binary)
     info = probe(cfg.input)
 
-    out_w = info.width * cfg.scale
-    out_h = info.height * cfg.scale
+    out_w = info.width * SCALE
+    out_h = info.height * SCALE
 
     _print_header(cfg, info, out_w, out_h)
 
@@ -62,12 +72,12 @@ def run(cfg: Config) -> None:
             binary=binary,
             models_dir=models_dir,
             model=cfg.model,
-            scale=cfg.scale,
+            scale=SCALE,
             total_frames=frame_count,
             verbose=cfg.verbose,
         )
 
-        print("[3/3] Assembling video...")
+        print("[3/3] Assembling video...", flush=True)
         assemble_video(
             frames_dir=upscaled_dir,
             output_path=cfg.output,
@@ -91,8 +101,8 @@ def _print_header(cfg: Config, info: VideoInfo, out_w: int, out_h: int) -> None:
     print(f"\nClarityFlow v{__version__}\n")
     print(f"  Input:   {cfg.input.name} ({info.resolution}, {info.fps:.0f}fps, {info.duration_str})")
     print(f"  Output:  {cfg.output.name} ({out_w}x{out_h})")
-    print(f"  Model:   {cfg.model}")
-    print(f"  Scale:   {cfg.scale}x")
+    print(f"  Mode:    {cfg.mode} -> {cfg.model}")
+    print(f"  Scale:   {SCALE}x")
     print()
 
 
