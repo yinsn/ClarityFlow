@@ -80,6 +80,7 @@ def assemble_video(
     fps: str,
     audio_source: Path | None = None,
     audio_codec: str | None = None,
+    audio_enhanced: bool = False,
     codec: str = "libx264",
     crf: int = 18,
     pix_fmt: str = "yuv420p",
@@ -93,10 +94,15 @@ def assemble_video(
         "-i", str(frames_dir / "frame%08d.png"),
     ]
 
-    if audio_source and audio_codec:
+    if audio_source:
         cmd.extend(["-i", str(audio_source), "-map", "0:v:0", "-map", "1:a:0"])
         out_ext = output_path.suffix.lower()
-        if out_ext == ".mp4" and audio_codec == "opus":
+        if audio_enhanced:
+            if out_ext in (".mkv", ".webm"):
+                cmd.extend(["-c:a", "libopus", "-b:a", "192k"])
+            else:
+                cmd.extend(["-c:a", "aac", "-b:a", "192k"])
+        elif out_ext == ".mp4" and audio_codec == "opus":
             cmd.extend(["-c:a", "aac", "-b:a", "192k"])
         else:
             cmd.extend(["-c:a", "copy"])

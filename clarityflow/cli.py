@@ -17,6 +17,8 @@ def main() -> None:
     parser.add_argument("-o", "--output", type=Path, help="output file (default: <input>_4x.<ext>)")
     parser.add_argument("--mode", default="real", choices=["real", "anime"],
                         help="content type: real for live-action, anime for animation (default: real)")
+    parser.add_argument("--no-enhance-audio", action="store_true",
+                        help="disable audio enhancement (DeepFilterNet)")
     parser.add_argument("--codec", default="libx264",
                         help="output video codec (default: libx264)")
     parser.add_argument("--crf", type=int, default=18,
@@ -37,6 +39,7 @@ def main() -> None:
         input=args.input.resolve(),
         output=args.output.resolve(),
         mode=args.mode,
+        enhance_audio=not args.no_enhance_audio,
         codec=args.codec,
         crf=args.crf,
         keep_frames=args.keep_frames,
