@@ -106,6 +106,9 @@ def run(cfg: Config) -> None:
                     verbose=cfg.verbose,
                 )
                 enhanced_audio_path = audio_future.result()
+            clarity_path = work_dir / "clarity.wav"
+            audio.clarity_filter(enhanced_audio_path, clarity_path, verbose=cfg.verbose)
+            enhanced_audio_path = clarity_path
             print("      Audio enhanced")
         else:
             upscale(
