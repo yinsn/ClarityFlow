@@ -6,3 +6,5 @@ build/
 .venv/
 vendor/
 *.mkv
+.DS_Store
+.claude/
